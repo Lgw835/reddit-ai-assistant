@@ -13,6 +13,7 @@ export type RuntimeMessage =
   | { type: 'CAPTURE_SELECTION'; selectionText: string }
   | { type: 'LIBRARY_CHANGED'; postId?: string }
   | { type: 'BRIDGE_REQUEST'; path: string; method?: string; body?: unknown }
+  | { type: 'EXPAND_PROGRESS'; round: number; count: number }
   | { type: 'OPEN_PANEL' };
 
 export interface BridgeResponse<T = unknown> {

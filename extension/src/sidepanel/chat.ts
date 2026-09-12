@@ -392,15 +392,36 @@ export function initChat(): void {
 
   $('#btn-expand').addEventListener('click', async () => {
     const btn = $('#btn-expand') as HTMLButtonElement;
+    const hint = $('#chat-hint');
     btn.disabled = true;
     btn.textContent = '展开中…';
-    const res = await sendToActiveTab<{ ok: boolean; before: number; after: number }>({
+    hint.textContent = '正在展开评论，长帖可能要几十秒…';
+
+    const onProgress = (msg: { type?: string; round?: number; count?: number }) => {
+      if (msg?.type === 'EXPAND_PROGRESS') {
+        hint.textContent = '第 ' + msg.round + ' 轮，已加载 ' + msg.count + ' 条…';
+      }
+    };
+    chrome.runtime.onMessage.addListener(onProgress);
+
+    const res = await sendToActiveTab<{ ok: boolean; before: number; after: number; rounds: number }>({
       type: 'EXPAND_ALL',
     });
+
+    chrome.runtime.onMessage.removeListener(onProgress);
     btn.textContent = '展开全部';
     btn.disabled = false;
-    if (res?.ok) addSystemLine('已展开评论：' + res.before + ' → ' + res.after + ' 条');
-    else addSystemLine('展开失败：当前页面不可用');
+    hint.textContent = '';
+
+    if (res?.ok) {
+      addSystemLine(
+        res.after > res.before
+          ? '已展开评论：' + res.before + ' → ' + res.after + ' 条'
+          : '没有更多可展开的评论了，当前 ' + res.after + ' 条',
+      );
+    } else {
+      addSystemLine('展开失败：当前页面不可用');
+    }
     void refreshContextBar();
   });
 

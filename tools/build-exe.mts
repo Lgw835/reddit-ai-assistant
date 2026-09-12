@@ -101,10 +101,21 @@ console.log('   ' + (statSync(blobPath).size / 1024 / 1024).toFixed(1) + ' MB');
 
 // ---- 4. 复制 node 运行时 ----
 step(4, '复制 Node 运行时');
-const exePath = join(OUT_DIR, EXE_NAME);
-rmSync(exePath, { force: true });
+// 旧的 exe 正在运行时文件被锁住，这时换个名字输出，不打断用户当前在用的服务
+let exePath = join(OUT_DIR, EXE_NAME);
+let locked = false;
+try {
+  rmSync(exePath, { force: true });
+} catch {
+  locked = true;
+  exePath = join(OUT_DIR, EXE_NAME.replace(/.exe$/, '') + '-new.exe');
+  rmSync(exePath, { force: true });
+}
 copyFileSync(process.execPath, exePath);
 console.log('   ' + exePath);
+if (locked) {
+  console.log('   （原文件正被运行中的服务占用，已改名输出）');
+}
 
 // ---- 5. 注入 ----
 step(5, '注入到可执行文件');
@@ -117,6 +128,11 @@ execFileSync(
 const mb = (statSync(exePath).size / 1024 / 1024).toFixed(1);
 console.log(`\n完成： ${exePath}  (${mb} MB)`);
 console.log('双击即可启动，目标机器不需要安装 Node。');
+if (locked) {
+  console.log('');
+  console.log('提示：旧版本正在运行，新文件输出为 ' + EXE_NAME.replace(/.exe$/, '') + '-new.exe。');
+  console.log('关掉正在运行的窗口后，删除旧文件并把新文件改回原名即可。');
+}
 if (embedded) {
   console.log('注意：该 exe 内含你的数据库密码与模型 Key，不要分发给别人。');
 }

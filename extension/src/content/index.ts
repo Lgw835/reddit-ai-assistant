@@ -97,7 +97,10 @@ function handleMessage(
       return true;
     }
     case 'EXPAND_ALL': {
-      void expandAll(20).then((res) => {
+      void expandAll(40, (round, count) => {
+        // 长帖要跑几十秒，把进度回传，免得面板看起来像卡住
+        chrome.runtime.sendMessage({ type: 'EXPAND_PROGRESS', round, count }).catch(() => {});
+      }).then((res) => {
         decorateAll();
         refreshSavedMarks();
         sendResponse({ ok: true, ...res });

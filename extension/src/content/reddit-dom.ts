@@ -157,17 +157,48 @@ function moreButtons(): HTMLElement[] {
   return [...out];
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * 顶层评论不是按钮加载的，而是滚动到底部时由 faceplate-partial 懒加载补上。
+ * 所以光点「更多回复」最多只能展开首屏那一批，必须同时把底部拉进视口。
+ */
+async function triggerLazyLoad(): Promise<void> {
+  const tree = document.querySelector('shreddit-comment-tree');
+  const lazy = [...document.querySelectorAll<HTMLElement>('faceplate-partial[loading="lazy"]')].filter(
+    (el) => el.closest('shreddit-comment-tree'),
+  );
+
+  const target = lazy[lazy.length - 1] ?? (tree ? (tree.lastElementChild as HTMLElement | null) : null);
+  if (target) {
+    target.scrollIntoView({ block: 'center', behavior: 'auto' });
+  } else {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
+  }
+  await sleep(220);
+  window.scrollBy(0, 500); // 再压一点，确保真正进入视口
+}
+
+/**
+ * 尽可能展开全部评论。
+ *
+ * 两种加载方式要一起处理：折叠的回复靠点按钮，顶层评论靠滚动懒加载。
+ * 以"评论数不再增长"作为结束条件，而不是"没有按钮可点"。
+ */
 export async function expandAll(
-  maxRounds = 20,
+  maxRounds = 40,
   onProgress?: (round: number, count: number) => void,
 ): Promise<{ rounds: number; before: number; after: number }> {
   const before = allCommentElements().length;
+  const startY = window.scrollY;
   let rounds = 0;
+  let last = before;
+  let stagnant = 0;
 
   for (let i = 0; i < maxRounds; i++) {
-    const buttons = moreButtons();
-    if (!buttons.length) break;
     rounds = i + 1;
+
+    const buttons = moreButtons();
     for (const b of buttons) {
       b.dataset.rcClicked = '1';
       try {
@@ -176,9 +207,23 @@ export async function expandAll(
         /* 忽略无法点击的元素 */
       }
     }
-    onProgress?.(rounds, allCommentElements().length);
-    await new Promise((r) => setTimeout(r, 900));
+
+    await triggerLazyLoad();
+    await sleep(buttons.length ? 950 : 1200);
+
+    const count = allCommentElements().length;
+    onProgress?.(rounds, count);
+
+    if (count === last && buttons.length === 0) {
+      // 网络慢时可能这一轮刚好没返回，多等几轮再收手
+      stagnant += 1;
+      if (stagnant >= 3) break;
+    } else {
+      stagnant = 0;
+    }
+    last = count;
   }
 
+  window.scrollTo({ top: startY, behavior: 'auto' });
   return { rounds, before, after: allCommentElements().length };
 }
