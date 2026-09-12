@@ -86,6 +86,18 @@ export async function deleteComment(id: string): Promise<boolean> {
   return res.affectedRows > 0;
 }
 
+/** 删掉一个帖子下所有已收藏的评论，以及帖子本身 */
+export async function deletePostCollection(postId: string): Promise<number> {
+  const pool = getPool();
+  await pool.query(
+    'DELETE ct FROM comment_tags ct JOIN comments c ON c.id = ct.comment_id WHERE c.post_id = ?',
+    [postId],
+  );
+  const [res] = await pool.query<ResultSetHeader>('DELETE FROM comments WHERE post_id = ?', [postId]);
+  await pool.query('DELETE FROM posts WHERE id = ?', [postId]);
+  return res.affectedRows;
+}
+
 export async function setNote(id: string, note: string | null): Promise<void> {
   await getPool().query('UPDATE comments SET note = ? WHERE id = ?', [note, id]);
 }

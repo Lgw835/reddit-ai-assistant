@@ -1,4 +1,5 @@
 import { bridgeFetch, getBridgeBaseSafe } from './util';
+import { confirmDialog, promptDialog, alertDialog, toast } from './dialog.js';
 import type { CommentListItem } from '../shared/types';
 import { openAndHighlight, sendToActiveTab } from './tabs';
 
@@ -79,37 +80,73 @@ function card(item: CommentListItem): HTMLElement {
   const btnNote = el('button', 'mini', item.note ? '改备注' : '加备注');
   btnNote.type = 'button';
   btnNote.addEventListener('click', async () => {
-    const note = window.prompt('给这条评论写点备注：', item.note ?? '');
+    const note = await promptDialog('给这条评论写点备注：', item.note ?? '', '写点什么…');
     if (note === null) return;
-    await bridgeFetch('/api/comments/' + encodeURIComponent(item.id), {
-      method: 'PATCH',
-      body: JSON.stringify({ note }),
-    });
-    await reload();
+    try {
+      await bridgeFetch('/api/comments/' + encodeURIComponent(item.id), {
+        method: 'PATCH',
+        body: JSON.stringify({ note }),
+      });
+      toast('备注已保存');
+      await reload();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : String(err), 'err');
+    }
   });
   actions.appendChild(btnNote);
 
   const btnTag = el('button', 'mini', '标签');
   btnTag.type = 'button';
   btnTag.addEventListener('click', async () => {
-    const tags = window.prompt('用逗号分隔多个标签：', item.tags.join(','));
+    const tags = await promptDialog('用逗号分隔多个标签：', item.tags.join(','), '例如：咖啡, 手冲');
     if (tags === null) return;
-    await bridgeFetch('/api/comments/' + encodeURIComponent(item.id), {
-      method: 'PATCH',
-      body: JSON.stringify({ tags: tags.split(/[,，]/).map((t) => t.trim()).filter(Boolean) }),
-    });
-    await reload();
+    try {
+      await bridgeFetch('/api/comments/' + encodeURIComponent(item.id), {
+        method: 'PATCH',
+        body: JSON.stringify({ tags: tags.split(/[,，]/).map((t) => t.trim()).filter(Boolean) }),
+      });
+      toast('标签已保存');
+      await reload();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : String(err), 'err');
+    }
   });
   actions.appendChild(btnTag);
 
   const btnDel = el('button', 'mini', '删除');
   btnDel.type = 'button';
   btnDel.addEventListener('click', async () => {
-    if (!window.confirm('确定从收藏库删除这条评论？')) return;
-    await bridgeFetch('/api/comments/' + encodeURIComponent(item.id), { method: 'DELETE' });
-    await reload();
+    if (!(await confirmDialog('确定从收藏库删除这条评论？', { okText: '删除', danger: true }))) return;
+    try {
+      await bridgeFetch('/api/comments/' + encodeURIComponent(item.id), { method: 'DELETE' });
+      toast('已删除');
+      await reload();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : String(err), 'err');
+    }
   });
   actions.appendChild(btnDel);
+
+  if (item.postId) {
+    const btnDelPost = el('button', 'mini', '删除整帖');
+    btnDelPost.type = 'button';
+    btnDelPost.title = '删除这个帖子下所有已收藏的评论';
+    btnDelPost.addEventListener('click', async () => {
+      const name = item.postTitle ? '《' + item.postTitle.slice(0, 30) + '》' : '这个帖子';
+      if (!(await confirmDialog('删除 ' + name + ' 下所有已收藏的评论？此操作不可撤销。', { okText: '全部删除', danger: true }))) return;
+      try {
+        const res = await bridgeFetch<{ ok: boolean; removed: number }>(
+          '/api/posts/' + encodeURIComponent(item.postId),
+          { method: 'DELETE' },
+        );
+        toast('已删除 ' + (res.removed ?? 0) + ' 条');
+        await reload();
+      } catch (err) {
+        toast(err instanceof Error ? err.message : String(err), 'err');
+      }
+    });
+    actions.appendChild(btnDelPost);
+  }
 
   box.appendChild(actions);
   return box;
@@ -206,7 +243,7 @@ async function exportData(format: 'md' | 'json'): Promise<void> {
     a.remove();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
   } catch (err) {
-    window.alert('导出失败：' + (err instanceof Error ? err.message : String(err)));
+    void alertDialog('导出失败：' + (err instanceof Error ? err.message : String(err)));
   }
 }
 

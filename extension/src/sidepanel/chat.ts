@@ -4,6 +4,7 @@ import { bridgeStream, bridgeFetch } from '../shared/bridge';
 import { CITE_RE, resolveCitation } from '../shared/citations';
 import type { Citation, PageContext, RetrievalScope } from '../shared/types';
 import { getPageContext, getPageInfo, openAndHighlight, sendToActiveTab } from './tabs';
+import { confirmDialog, toast } from './dialog.js';
 
 let sessionId: string | undefined;
 let history: { role: 'user' | 'assistant'; content: string }[] = [];
@@ -281,14 +282,49 @@ async function loadHistoryList(): Promise<void> {
       addSystemLine('还没有历史对话');
       return;
     }
-    addSystemLine('点击任意一条恢复该对话');
+    addSystemLine('点击标题恢复对话，点「删除」移除该条记录');
+
+    const clearAll = el('button', 'mini', '清空全部对话记录');
+    clearAll.type = 'button';
+    clearAll.addEventListener('click', async () => {
+      if (!(await confirmDialog('删除全部 ' + res.items.length + ' 条对话记录？此操作不可撤销。', { okText: '全部删除', danger: true }))) return;
+      try {
+        await bridgeFetch('/api/chat/sessions', { method: 'DELETE' });
+        toast('已清空对话记录');
+        await loadHistoryList();
+      } catch (err) {
+        toast(err instanceof Error ? err.message : String(err), 'err');
+      }
+    });
+    box.appendChild(clearAll);
+
     for (const s of res.items) {
-      const item = el('button', 'sources__item');
+      const row = el('div', 'history__row');
+
+      const item = el('button', 'sources__item history__open');
       item.type = 'button';
       item.textContent =
         (s.title ?? '(无标题)') + '　·　' + (s.msg_count ?? 0) + ' 条　' + (s.updated_at ?? '');
       item.addEventListener('click', () => void restoreSession(s.id, s.title));
-      box.appendChild(item);
+      row.appendChild(item);
+
+      const del = el('button', 'mini history__del', '删除');
+      del.type = 'button';
+      del.title = '删除这条对话记录';
+      del.addEventListener('click', async () => {
+        if (!(await confirmDialog('删除这条对话记录？ ' + (s.title ?? ''), { okText: '删除', danger: true }))) return;
+        try {
+          await bridgeFetch('/api/chat/sessions/' + encodeURIComponent(s.id), { method: 'DELETE' });
+          if (sessionId === s.id) sessionId = undefined;
+          toast('已删除');
+          await loadHistoryList();
+        } catch (err) {
+          toast(err instanceof Error ? err.message : String(err), 'err');
+        }
+      });
+      row.appendChild(del);
+
+      box.appendChild(row);
     }
   } catch (err) {
     box.innerHTML = '';

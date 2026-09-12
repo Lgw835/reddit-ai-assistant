@@ -210,6 +210,17 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     return { ok: true, items: rows };
   });
 
+  app.delete('/api/chat/sessions', async (req, reply) => {
+    if (!isReady()) {
+      reply.code(503);
+      return { ok: false };
+    }
+    const pool = getPool();
+    await pool.query('DELETE FROM chat_messages');
+    await pool.query('DELETE FROM chat_sessions');
+    return { ok: true };
+  });
+
   app.delete<{ Params: { id: string } }>('/api/chat/sessions/:id', async (req, reply) => {
     if (!isReady()) {
       reply.code(503);

@@ -1,5 +1,6 @@
 import { bridgeFetch, $, setStatus } from './util';
 import { getEndpoint } from '../shared/messages';
+import { confirmDialog } from './dialog.js';
 import type { DbSettings, LlmSettings, RetrievalSettings } from '../shared/types';
 
 interface SettingsResponse {
@@ -196,7 +197,7 @@ export function bindConnectionControls(controls: ConnectionControls): void {
   });
 
   $('#btn-disconnect').addEventListener('click', async () => {
-    if (!window.confirm('断开后需要重新填写服务地址并测试连接，确定吗？')) return;
+    if (!(await confirmDialog('断开后需要重新填写服务地址并测试连接，确定吗？', { okText: '断开' }))) return;
     await controls.disconnect();
   });
 }
