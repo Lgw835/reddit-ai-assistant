@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.vite/
+.vercel/
+
+# 本地配置与凭据，绝对不要提交
+add.txt
+.env
+.env.local
+server/.env
+server/data/
+
+# 浏览器另存的 Reddit 页面快照：含登录账号的 user-id / csrf_token 等个人标识，
+# 仅用于本地验证 DOM 解析，不入库
+*.html
+!extension/sidepanel.html
+
+*.log

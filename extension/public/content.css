@@ -1,0 +1,154 @@
+/* Reddit 评论收集器 —— 注入到 reddit.com 页面的样式 */
+
+.rc-anchor {
+  position: relative !important;
+}
+
+.rc-chip {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 999px;
+  background: var(--rc-chip-bg, #ffffff);
+  color: var(--rc-chip-fg, #1a1a1b);
+  font: 500 11px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  user-select: none;
+}
+
+.rc-chip:hover {
+  border-color: #ff4500;
+  color: #ff4500;
+}
+
+.rc-anchor:hover > .rc-chip,
+.rc-chip:focus-visible,
+.rc-chip.rc-saved,
+.rc-chip.rc-busy {
+  opacity: 1;
+}
+
+.rc-chip.rc-saved {
+  border-color: #ff4500;
+  color: #ff4500;
+  background: rgba(255, 69, 0, 0.08);
+}
+
+.rc-chip.rc-busy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.rc-chip.rc-error {
+  border-color: #d93900;
+  color: #d93900;
+}
+
+.rc-anchor.rc-is-saved {
+  border-left: 3px solid #ff4500;
+  padding-left: 8px;
+  background: rgba(255, 69, 0, 0.045);
+  border-radius: 4px;
+}
+
+/* 帖子顶部工具条 */
+.rc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 69, 0, 0.05);
+  font: 500 12px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.rc-toolbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #ff4500;
+  font-weight: 700;
+}
+
+.rc-btn {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rc-btn:hover:not(:disabled) {
+  border-color: #ff4500;
+  color: #ff4500;
+}
+
+.rc-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.rc-toolbar__status {
+  margin-left: auto;
+  opacity: 0.75;
+  font-weight: 400;
+}
+
+/* 引用跳转时的闪烁高亮 */
+.rc-flash {
+  animation: rc-flash-anim 1s ease-in-out 3;
+  border-radius: 6px;
+}
+
+@keyframes rc-flash-anim {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 69, 0, 0); background: transparent; }
+  50% { box-shadow: 0 0 0 3px rgba(255, 69, 0, 0.55); background: rgba(255, 69, 0, 0.12); }
+}
+
+.rc-toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483000;
+  max-width: 360px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #1a1a1b;
+  color: #fff;
+  font: 400 13px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.rc-toast.rc-toast--show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rc-toast--error {
+  background: #8b1a00;
+}
+
+@media (prefers-color-scheme: dark) {
+  .rc-chip {
+    --rc-chip-bg: #1a1a1b;
+    --rc-chip-fg: #d7dadc;
+  }
+}

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reddit 助手</title>
+    <link rel="stylesheet" href="./src/sidepanel/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__title">
+        <span class="dot"></span>
+        <strong>Reddit 助手</strong>
+      </div>
+      <nav class="tabs" id="tabs">
+        <button class="tab tab--active" data-tab="chat" type="button">对话</button>
+        <button class="tab" data-tab="library" type="button">收藏库</button>
+        <button class="tab" data-tab="settings" type="button">设置</button>
+      </nav>
+    </header>
+
+    <div class="banner banner--hidden" id="bridge-banner"></div>
+
+    <main>
+      <!-- 连接门禁：验证通过前挡住其余功能 -->
+      <section class="view view--active" id="view-connect">
+        <div class="gate">
+          <h2 class="gate__title">连接你的服务</h2>
+          <p class="gate__desc">
+            插件需要一个后端服务来连接数据库和大模型。填写你部署好的 Vercel 域名，
+            测试通过后才会进入对话界面。
+          </p>
+
+          <label class="gate__label">服务地址
+            <input id="connect-base" type="text" placeholder="https://your-project.vercel.app" spellcheck="false" />
+          </label>
+
+          <label class="gate__label">访问令牌
+            <input id="connect-token" type="password" placeholder="Vercel 环境变量里的 ACCESS_TOKEN" spellcheck="false" />
+          </label>
+
+          <div class="gate__actions">
+            <button class="primary" id="btn-connect" type="button">测试并连接</button>
+            <button class="mini" id="btn-connect-local" type="button">用本地服务</button>
+          </div>
+
+          <div class="hint gate__status" id="connect-status"></div>
+
+          <details class="gate__help">
+            <summary>怎么部署到 Vercel</summary>
+            <ol>
+              <li>把项目推到 GitHub，在 Vercel 导入该仓库</li>
+              <li>Root Directory 选择 <code>server</code></li>
+              <li>在 Environment Variables 里填 <code>ACCESS_TOKEN</code>、<code>DB_*</code>、<code>LLM_*</code></li>
+              <li>部署完成后把域名填到上面</li>
+            </ol>
+            <p>详细步骤见项目根目录的 README。</p>
+          </details>
+        </div>
+      </section>
+
+      <!-- 对话 -->
+      <section class="view" id="view-chat">
+        <div class="context-bar">
+          <span id="page-info" class="context-bar__info">正在检测当前页面…</span>
+          <div class="context-bar__actions">
+            <button class="mini" id="btn-expand" type="button" title="循环点击页面上的“更多回复”，把评论全部展开">展开全部</button>
+            <button class="mini" id="btn-bulk" type="button" title="把当前页面已加载的评论全部存入收藏库">收藏整帖</button>
+            <button class="mini" id="btn-refresh-ctx" type="button">刷新</button>
+          </div>
+        </div>
+
+        <div class="scope-bar">
+          <label>检索范围</label>
+          <select id="scope">
+            <option value="page+library">当前页面 + 收藏库</option>
+            <option value="page">仅当前页面</option>
+            <option value="library">仅收藏库</option>
+          </select>
+          <button class="mini" id="btn-new-chat" type="button">新对话</button>
+          <button class="mini" id="btn-history" type="button">历史</button>
+        </div>
+
+        <div class="messages" id="messages"></div>
+
+        <form class="composer" id="composer">
+          <textarea
+            id="input"
+            rows="3"
+            placeholder="描述你想找什么，例如：谁在讨论手冲水温？有哪些人不推荐这台机器？（Enter 发送，Shift+Enter 换行）"
+          ></textarea>
+          <div class="composer__row">
+            <span class="hint" id="chat-hint"></span>
+            <button class="primary" id="btn-send" type="submit">发送</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 收藏库 -->
+      <section class="view" id="view-library">
+        <div class="filters">
+          <input id="lib-q" type="search" placeholder="搜索正文 / 作者 / 备注 / 帖子标题" />
+          <div class="filters__row">
+            <select id="lib-subreddit"><option value="">全部版块</option></select>
+            <select id="lib-author"><option value="">全部作者</option></select>
+            <select id="lib-tag"><option value="">全部标签</option></select>
+          </div>
+          <div class="filters__row">
+            <span class="hint" id="lib-count"></span>
+            <span class="spacer"></span>
+            <button class="mini" id="btn-export-md" type="button">导出 Markdown</button>
+            <button class="mini" id="btn-export-json" type="button">导出 JSON</button>
+          </div>
+        </div>
+        <div class="lib-list" id="lib-list"></div>
+        <div class="lib-more">
+          <button class="mini" id="btn-lib-more" type="button" hidden>加载更多</button>
+        </div>
+      </section>
+
+      <!-- 设置 -->
+      <section class="view" id="view-settings">
+        <form id="form-settings">
+          <fieldset>
+            <legend>服务连接</legend>
+            <label>服务地址
+              <input id="set-bridge" type="text" readonly />
+            </label>
+            <div class="row">
+              <span class="hint" id="bridge-status"></span>
+            </div>
+            <div class="row">
+              <button class="mini" id="btn-test-bridge" type="button">重新检测</button>
+              <button class="mini" id="btn-disconnect" type="button">更换服务地址</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>MySQL 数据库</legend>
+            <div class="grid2">
+              <label>主机<input id="db-host" type="text" placeholder="mysql.example.com" /></label>
+              <label>端口<input id="db-port" type="number" placeholder="3306" /></label>
+            </div>
+            <label>数据库名<input id="db-name" type="text" /></label>
+            <div class="grid2">
+              <label>用户名<input id="db-user" type="text" /></label>
+              <label>密码<input id="db-password" type="password" placeholder="********" /></label>
+            </div>
+            <div class="row">
+              <button class="primary" id="btn-db-save" type="button">测试并保存（自动建表）</button>
+              <span class="hint" id="db-status"></span>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>大模型接口（OpenAI 兼容）</legend>
+            <label>Base URL<input id="llm-url" type="text" placeholder="https://api.example.com/v1" /></label>
+            <div class="grid2">
+              <label>API Key<input id="llm-key" type="password" placeholder="********" /></label>
+              <label>模型<input id="llm-model" type="text" placeholder="gpt-4o-mini" /></label>
+            </div>
+            <label>温度<input id="llm-temp" type="number" step="0.1" min="0" max="2" /></label>
+            <div class="row">
+              <button class="mini" id="btn-test-llm" type="button">测试接口</button>
+              <button class="primary" id="btn-llm-save" type="button">保存</button>
+              <span class="hint" id="llm-status"></span>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>检索参数</legend>
+            <div class="grid2">
+              <label>页内全量阈值<input id="r-threshold" type="number" min="10" /></label>
+              <label>页内精选条数<input id="r-pagetopk" type="number" min="5" /></label>
+            </div>
+            <div class="grid2">
+              <label>收藏库条数<input id="r-libtopk" type="number" min="5" /></label>
+              <label>单条最大字数<input id="r-maxchars" type="number" min="200" /></label>
+            </div>
+            <div class="row">
+              <button class="primary" id="btn-retrieval-save" type="button">保存</button>
+              <span class="hint" id="retrieval-status"></span>
+            </div>
+          </fieldset>
+        </form>
+      </section>
+    </main>
+
+    <script type="module" src="./src/sidepanel/main.ts"></script>
+  </body>
+</html>

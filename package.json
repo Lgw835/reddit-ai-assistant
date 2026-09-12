@@ -1,0 +1,23 @@
+{
+  "name": "reddit-collector",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Reddit 评论收集 + AI 检索浏览器插件",
+  "workspaces": [
+    "extension",
+    "server"
+  ],
+  "scripts": {
+    "server": "npm --workspace server run start",
+    "server:dev": "npm --workspace server run dev",
+    "build": "npm --workspace extension run build",
+    "dev": "npm --workspace extension run dev",
+    "install:all": "npm install"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  }
+}
