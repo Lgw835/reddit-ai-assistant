@@ -1,20 +1,23 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../src/app.js';
 
 /**
  * Vercel Serverless Function 入口（Root Directory 设为 server 时使用）。
  *
- * 同一个实例会被多次复用，所以把 app 缓存在模块作用域，避免每次请求都重连数据库。
+ * 这里刻意不用静态 import：整个应用通过 try 里的动态 import 载入，
+ * 这样连模块加载阶段的错误（语法、依赖缺失、ESM/CJS 不匹配）也能被捕获并回给调用方。
+ * 否则平台只会显示一个 FUNCTION_INVOCATION_FAILED，排查时毫无线索。
  */
 let appPromise: Promise<FastifyInstance> | null = null;
 
 async function getApp(): Promise<FastifyInstance> {
   if (!appPromise) {
-    appPromise = buildApp(false).then(async (app) => {
+    appPromise = (async () => {
+      const { buildApp } = await import('../src/app.js');
+      const app = await buildApp(false);
       await app.ready();
       return app;
-    });
+    })();
   }
   return appPromise;
 }
@@ -27,11 +30,9 @@ export default async function handler(
     const app = await getApp();
     app.server.emit('request', req, res);
   } catch (err) {
-    // 启动失败时把原因直接回给调用方，否则平台只会显示一个
-    // FUNCTION_INVOCATION_FAILED，排查时什么线索都没有
     appPromise = null; // 允许下次请求重试
     const message = err instanceof Error ? err.message : String(err);
-    const stack = err instanceof Error && err.stack ? err.stack.split('\n').slice(0, 6) : [];
+    const stack = err instanceof Error && err.stack ? err.stack.split('\n').slice(0, 8) : [];
     console.error('[reddit-collector] 服务启动失败:', err);
     res.statusCode = 500;
     res.setHeader('content-type', 'application/json; charset=utf-8');

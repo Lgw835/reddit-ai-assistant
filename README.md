@@ -218,7 +218,7 @@ npx tsx tools/test-env-bundles.mts           # 验证合并写法的环境变量
 npx tsx tools/test-vercel-handler.mts        # 在本机模拟 Vercel 环境跑通整套接口
 npx tsx tools/test-vercel-handler.mts --bundled   # 同上，但只用 3 个合并变量
 npx tsx tools/test-vercel-handler.mts --root      # 测仓库根目录的部署入口
-npx tsx tools/test-bundled-entry.mts             # 按 Vercel 的打包方式（CJS）验证入口能起来
+npx tsx tools/test-bundled-entry.mts             # 按 ESM / CJS 两种产物验证入口能起来
 ```
 
 目录：

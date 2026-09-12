@@ -1,6 +1,7 @@
 {
   "name": "reddit-collector",
   "private": true,
+  "type": "module",
   "version": "0.1.0",
   "description": "Reddit 评论收集 + AI 检索浏览器插件",
   "workspaces": [
