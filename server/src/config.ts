@@ -16,6 +16,8 @@ export function isServerless(): boolean {
  * 这里兜底回退到 cwd —— 这几个路径只在本地运行时才会真正用到。
  */
 function serverDir(): string {
+  // 打包成单文件 EXE 后，配置与数据放在 exe 同目录，双击启动才找得到
+  if (process.env.RC_PACKAGED === '1') return dirname(process.execPath);
   try {
     const url = import.meta?.url;
     if (typeof url === 'string' && url) return resolve(dirname(fileURLToPath(url)), '..');
@@ -23,6 +25,17 @@ function serverDir(): string {
     /* 落到下面的 cwd */
   }
   return process.cwd();
+}
+
+/** 打包时由构建脚本注入的默认配置，保证 exe 单独拿出去也能直接用 */
+function packagedDefaults(): Partial<AppConfig> {
+  const raw = process.env.RC_EMBEDDED_CONFIG;
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as Partial<AppConfig>;
+  } catch {
+    return {};
+  }
 }
 
 export const DATA_DIR = resolve(serverDir(), 'data');
@@ -157,8 +170,12 @@ function pickEnv(name: string, fallback: string): string {
 }
 
 function defaults(): AppConfig {
-  const dbUrl = parseDatabaseUrl(process.env.DATABASE_URL ?? process.env.MYSQL_URL);
-  const llmBundle = parseLlmConfig(process.env.LLM_CONFIG);
+  const embedded = packagedDefaults();
+  const dbUrl = {
+    ...(embedded.db ?? {}),
+    ...parseDatabaseUrl(process.env.DATABASE_URL ?? process.env.MYSQL_URL),
+  };
+  const llmBundle = { ...(embedded.llm ?? {}), ...parseLlmConfig(process.env.LLM_CONFIG) };
 
   return {
     db: {

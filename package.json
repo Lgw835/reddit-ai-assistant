@@ -13,13 +13,15 @@
     "server:dev": "npm --workspace server run dev",
     "build": "npm --workspace extension run build",
     "dev": "npm --workspace extension run dev",
-    "install:all": "npm install"
+    "install:all": "npm install",
+    "build:exe": "tsx tools/build-exe.mts"
   },
   "engines": {
     "node": "22.x"
   },
   "devDependencies": {
-    "jsdom": "^29.1.1"
+    "jsdom": "^29.1.1",
+    "postject": "^1.0.0-alpha.6"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
