@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import { loadConfig, saveConfig, redact, unmask, type LlmConfig, type RetrievalConfig } from '../config';
-import { testLlm } from '../llm';
-import { syncSettingsToDb } from './db';
+import { loadConfig, saveConfig, redact, unmask, type LlmConfig, type RetrievalConfig } from '../config.js';
+import { testLlm } from '../llm.js';
+import { syncSettingsToDb } from './db.js';
 
 interface SettingsBody {
   llm?: Partial<LlmConfig>;

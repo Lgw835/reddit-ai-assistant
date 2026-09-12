@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import type { RowDataPacket } from 'mysql2';
-import { getPool, isReady } from '../db';
-import { loadConfig } from '../config';
-import { streamChat, type ChatMessage } from '../llm';
+import { getPool, isReady } from '../db.js';
+import { loadConfig } from '../config.js';
+import { streamChat, type ChatMessage } from '../llm.js';
 import {
   SYSTEM_PROMPT,
   buildContextBlock,
@@ -11,10 +11,10 @@ import {
   recentLibrary,
   resolveCitations,
   applyRepairs,
-} from '../retrieval';
-import type { RetrievalCandidate } from '../retrieval-types';
-import type { PageContext } from '../types';
-import { randomId } from '../util';
+} from '../retrieval.js';
+import type { RetrievalCandidate } from '../retrieval-types.js';
+import type { PageContext } from '../types.js';
+import { randomId } from '../util.js';
 
 interface ChatBody {
   sessionId?: string;

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import { isReady } from '../db';
-import { upsertPost, savedIdsForPost } from '../store';
-import type { PostRecord } from '../types';
+import { isReady } from '../db.js';
+import { upsertPost, savedIdsForPost } from '../store.js';
+import type { PostRecord } from '../types.js';
 
 export async function postRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Body: { post: PostRecord } }>('/api/posts', async (req, reply) => {

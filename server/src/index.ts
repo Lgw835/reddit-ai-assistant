@@ -1,5 +1,5 @@
-import { buildApp } from './app';
-import { closePool } from './db';
+import { buildApp } from './app.js';
+import { closePool } from './db.js';
 
 const PORT = Number(process.env.PORT ?? 8787);
 const HOST = process.env.HOST ?? '127.0.0.1';

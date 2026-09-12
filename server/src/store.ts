@@ -1,7 +1,7 @@
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
-import { getPool, isReady } from './db';
-import type { PostRecord, CommentRecord } from './types';
-import { toMysqlDate, clampText, toInt, excerpt, redditUrl } from './util';
+import { getPool, isReady } from './db.js';
+import type { PostRecord, CommentRecord } from './types.js';
+import { toMysqlDate, clampText, toInt, excerpt, redditUrl } from './util.js';
 
 export async function upsertPost(post: PostRecord): Promise<void> {
   if (!post?.id) throw new Error('缺少帖子 id');

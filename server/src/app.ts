@@ -1,13 +1,13 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import { autoConnect, dbStatus, isReady } from './db';
-import { loadConfig, isServerless } from './config';
-import { authRequired, registerAuth, isPublicDeploy } from './auth';
-import { dbRoutes, syncSettingsToDb, hydrateSettingsFromDb } from './routes/db';
-import { settingsRoutes } from './routes/settings';
-import { postRoutes } from './routes/posts';
-import { commentRoutes } from './routes/comments';
-import { chatRoutes } from './routes/chat';
+import { autoConnect, dbStatus, isReady } from './db.js';
+import { loadConfig, isServerless } from './config.js';
+import { authRequired, registerAuth, isPublicDeploy } from './auth.js';
+import { dbRoutes, syncSettingsToDb, hydrateSettingsFromDb } from './routes/db.js';
+import { settingsRoutes } from './routes/settings.js';
+import { postRoutes } from './routes/posts.js';
+import { commentRoutes } from './routes/comments.js';
+import { chatRoutes } from './routes/chat.js';
 
 export const VERSION = '0.2.0';
 

@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../server/src/app';
+import { buildApp } from '../server/src/app.js';
 
 /**
  * 仓库根目录的 Vercel 入口。

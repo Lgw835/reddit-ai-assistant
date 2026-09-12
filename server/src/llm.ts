@@ -1,4 +1,4 @@
-import type { LlmConfig } from './config';
+import type { LlmConfig } from './config.js';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';

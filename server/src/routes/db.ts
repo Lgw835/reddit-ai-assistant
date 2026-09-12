@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { RowDataPacket } from 'mysql2';
-import { connect, dbStatus, isReady, getPool } from '../db';
+import { connect, dbStatus, isReady, getPool } from '../db.js';
 import {
   loadConfig,
   saveConfig,
@@ -10,8 +10,8 @@ import {
   isServerless,
   type DbConfig,
   type RetrievalConfig,
-} from '../config';
-import { stats } from '../store';
+} from '../config.js';
+import { stats } from '../store.js';
 
 interface ConnectBody {
   host?: string;

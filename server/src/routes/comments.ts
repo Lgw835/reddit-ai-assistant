@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { isReady } from '../db';
+import { isReady } from '../db.js';
 import {
   upsertPost,
   upsertComments,
@@ -10,9 +10,9 @@ import {
   facets,
   stats,
   exportAll,
-} from '../store';
-import type { CommentRecord, PostRecord } from '../types';
-import { redditUrl } from '../util';
+} from '../store.js';
+import type { CommentRecord, PostRecord } from '../types.js';
+import { redditUrl } from '../util.js';
 
 interface SaveBody {
   post?: PostRecord;

@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../src/app';
+import { buildApp } from '../src/app.js';
 
 /**
  * Vercel Serverless Function 入口（Root Directory 设为 server 时使用）。

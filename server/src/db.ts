@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise';
 import type { Pool } from 'mysql2/promise';
-import { loadConfig, type DbConfig } from './config';
+import { loadConfig, type DbConfig } from './config.js';
 
 /**
  * Serverless 环境里同一个实例会处理多次请求，模块级变量可能被重新求值，

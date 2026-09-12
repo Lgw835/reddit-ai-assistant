@@ -1,8 +1,8 @@
 import MiniSearch from 'minisearch';
 import type { RowDataPacket } from 'mysql2';
-import { getPool, isReady } from './db';
-import type { PageComment, RetrievalCandidate } from './retrieval-types';
-import type { RetrievalConfig } from './config';
+import { getPool, isReady } from './db.js';
+import type { PageComment, RetrievalCandidate } from './retrieval-types.js';
+import type { RetrievalConfig } from './config.js';
 
 const CJK = /[㐀-鿿぀-ヿ가-힯]/;
 
