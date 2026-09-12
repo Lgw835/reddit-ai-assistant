@@ -68,7 +68,9 @@ chrome.runtime.onMessage.addListener((msg: RuntimeMessage, _sender, sendResponse
       try {
         const ep = await getEndpoint();
         const base = ep.base || DEFAULT_BRIDGE;
-        const headers: Record<string, string> = { 'content-type': 'application/json' };
+        const headers: Record<string, string> = {};
+        // 只有带请求体时才声明 JSON，否则 Fastify 会因空 body 返回 400
+        if (msg.body !== undefined) headers['content-type'] = 'application/json';
         if (ep.token) headers['x-rc-token'] = ep.token;
         const res = await fetch(base + msg.path, {
           method: msg.method ?? 'GET',

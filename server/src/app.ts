@@ -26,6 +26,22 @@ export async function buildApp(log = true): Promise<FastifyInstance> {
     allowedHeaders: ['content-type', 'authorization', 'x-rc-token'],
   });
 
+  // 客户端可能在没有请求体时也带上 JSON 的 content-type（DELETE 最常见），
+  // 默认解析器会因此回 400，这里把空 body 当成空对象处理
+  app.addContentTypeParser(
+    'application/json',
+    { parseAs: 'string' },
+    (_req, body: string, done) => {
+      if (!body || !body.trim()) return done(null, {});
+      try {
+        done(null, JSON.parse(body));
+      } catch (err) {
+        (err as { statusCode?: number }).statusCode = 400;
+        done(err as Error, undefined);
+      }
+    },
+  );
+
   registerAuth(app);
 
   // 插件用它来验证域名是否可用：不需要令牌，但会说明是否需要令牌

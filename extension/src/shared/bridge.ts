@@ -17,6 +17,17 @@ async function target(): Promise<{ base: string; headers: Record<string, string>
   return { base: ep.base || DEFAULT_BRIDGE, headers };
 }
 
+/**
+ * 没有请求体时不能带 JSON 的 content-type。
+ * Fastify 见到 application/json 却收到空 body 会直接回 400，
+ * DELETE 这类请求全军覆没。
+ */
+function headersFor(headers: Record<string, string>, body: BodyInit | null | undefined) {
+  if (body !== undefined && body !== null) return headers;
+  const { 'content-type': _omit, ...rest } = headers;
+  return rest;
+}
+
 function friendly(base: string, status?: number): string {
   if (status === 401) return '访问令牌不正确，请在「设置」里重新填写并测试连接。';
   return '连不上服务（' + base + '）。本地部署请先运行 npm run server；云端部署请检查域名是否正确、是否已部署成功。';
@@ -32,7 +43,7 @@ export async function bridgeFetch<T>(
   try {
     res = await fetch(base + path, {
       ...init,
-      headers: { ...headers, ...(init.headers ?? {}) },
+      headers: { ...headersFor(headers, init.body), ...(init.headers ?? {}) },
     });
   } catch {
     throw new BridgeError(friendly(base));
