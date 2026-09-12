@@ -133,6 +133,8 @@ Vercel 的输入框支持**整段粘贴**：把三行 `KEY=value` 一起贴进 K
   大模型配置仍可在插件里随时改，改动存进数据库的 `settings` 表。
 - 想单独换模型而不重写整串，加一条 `LLM_MODEL` 即可，单项变量优先级高于 `LLM_CONFIG`。
   同理还有 `DB_HOST` `DB_PORT` `DB_NAME` `DB_USER` `DB_PASSWORD` `LLM_BASE_URL` `LLM_API_KEY` `LLM_TEMPERATURE`。
+- **函数 500 / `FUNCTION_INVOCATION_FAILED`** —— 打开 `域名/api/health`，现在会直接返回
+  失败原因和调用栈，而不是一个空白的 500。
 - **构建报错 `No Output Directory named "public" found`** —— 仓库根目录的 `build` 脚本是
   用来打包浏览器扩展的，Vercel 会误以为要构建静态站点。`vercel.json` 里已经用
   `buildCommand` 跳过构建并把 `outputDirectory` 指向 `public/`（一个服务状态页）。
@@ -216,6 +218,7 @@ npx tsx tools/test-env-bundles.mts           # 验证合并写法的环境变量
 npx tsx tools/test-vercel-handler.mts        # 在本机模拟 Vercel 环境跑通整套接口
 npx tsx tools/test-vercel-handler.mts --bundled   # 同上，但只用 3 个合并变量
 npx tsx tools/test-vercel-handler.mts --root      # 测仓库根目录的部署入口
+npx tsx tools/test-bundled-entry.mts             # 按 Vercel 的打包方式（CJS）验证入口能起来
 ```
 
 目录：

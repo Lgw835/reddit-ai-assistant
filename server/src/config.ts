@@ -3,15 +3,31 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-export const DATA_DIR = resolve(__dirname, '../data');
-const CONFIG_PATH = resolve(DATA_DIR, 'config.json');
-const ENV_PATH = resolve(__dirname, '../.env');
-
 /** Vercel 等无状态环境：文件系统只读，配置只能来自环境变量 + 数据库 */
 export function isServerless(): boolean {
   return Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 }
+
+/**
+ * 定位 server/ 目录。
+ *
+ * 打包器把 ESM 转成 CJS 时 import.meta 会变成空对象，直接用
+ * fileURLToPath(import.meta.url) 会在模块加载阶段抛错，整个函数起不来。
+ * 这里兜底回退到 cwd —— 这几个路径只在本地运行时才会真正用到。
+ */
+function serverDir(): string {
+  try {
+    const url = import.meta?.url;
+    if (typeof url === 'string' && url) return resolve(dirname(fileURLToPath(url)), '..');
+  } catch {
+    /* 落到下面的 cwd */
+  }
+  return process.cwd();
+}
+
+export const DATA_DIR = resolve(serverDir(), 'data');
+const CONFIG_PATH = resolve(DATA_DIR, 'config.json');
+const ENV_PATH = resolve(serverDir(), '.env');
 
 // 本地有 server/.env 就先加载，作为下面默认值的来源（Node >= 20.12）
 if (!isServerless() && existsSync(ENV_PATH) && typeof process.loadEnvFile === 'function') {
