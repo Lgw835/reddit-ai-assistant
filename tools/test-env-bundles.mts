@@ -18,19 +18,25 @@ const eq = (name: string, got: unknown, want: unknown) => {
 eq(
   '标准连接串',
   parseDatabaseUrl('mysql://alice:s3cret@db.example.com:3311/mydb'),
-  { host: 'db.example.com', port: 3311, database: 'mydb', user: 'alice', password: 's3cret' },
+  { host: 'db.example.com', port: 3311, database: 'mydb', user: 'alice', password: 's3cret', ssl: false },
 );
 
 eq(
   '省略端口时默认 3306',
   parseDatabaseUrl('mysql://alice:s3cret@db.example.com/mydb'),
-  { host: 'db.example.com', port: 3306, database: 'mydb', user: 'alice', password: 's3cret' },
+  { host: 'db.example.com', port: 3306, database: 'mydb', user: 'alice', password: 's3cret', ssl: false },
 );
 
 eq(
   '密码含特殊字符（需转义）',
   parseDatabaseUrl('mysql://alice:p%40ss%3Aword%2F1@db.example.com:3306/mydb'),
-  { host: 'db.example.com', port: 3306, database: 'mydb', user: 'alice', password: 'p@ss:word/1' },
+  { host: 'db.example.com', port: 3306, database: 'mydb', user: 'alice', password: 'p@ss:word/1', ssl: false },
+);
+
+eq(
+  '连接串里的 ?sslmode=require 会开启 TLS',
+  parseDatabaseUrl('mysql://u:p@gateway.example.com:4000/test?sslmode=require').ssl,
+  true,
 );
 
 eq('mysql2:// 前缀也认', parseDatabaseUrl('mysql2://u:p@h:3306/d').host, 'h');

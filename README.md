@@ -127,12 +127,20 @@ Vercel 的输入框支持**整段粘贴**：把三行 `KEY=value` 一起贴进 K
 
 ### 其它说明
 
-- 函数区域已在 `server/vercel.json` 里设为新加坡 `sin1`，离国内的数据库和常见的 AI 接口都比较近。
+- 函数区域默认设为香港 `hkg1`（`vercel.json` 里的 `regions`），这是离大陆最近的可选区域。
+  **函数要和数据库尽量同区**，否则连接会很慢甚至超时。
 - 数据表在第一次请求时自动创建，不需要手动建。
 - **云端部署后，数据库连接信息只能在 Vercel 环境变量里改**，插件设置页里那几个框会变成只读；
   大模型配置仍可在插件里随时改，改动存进数据库的 `settings` 表。
 - 想单独换模型而不重写整串，加一条 `LLM_MODEL` 即可，单项变量优先级高于 `LLM_CONFIG`。
   同理还有 `DB_HOST` `DB_PORT` `DB_NAME` `DB_USER` `DB_PASSWORD` `LLM_BASE_URL` `LLM_API_KEY` `LLM_TEMPERATURE`。
+- **状态页显示「数据库未连接：connect ETIMEDOUT」** —— 函数本身没问题，是连不上数据库。
+  最常见的原因是数据库只面向特定地区开放，而函数跑在另一个地区。按这个顺序试：
+  1. 把 `vercel.json` 里的 `regions` 换成离数据库更近的区域，重新部署（本仓库默认 `hkg1` 香港）
+  2. 还是超时，就说明该数据库不接受来自云端的连接，换一个对公网开放的 MySQL，
+     或者改用本地服务模式（侧边栏点「用本地服务」）
+  3. 云端 MySQL 大多强制 TLS，连接串结尾加 `?sslmode=require` 即可，例如
+     `mysql://用户:密码@gateway.xxx.com:4000/库名?sslmode=require`
 - **函数 500 / `FUNCTION_INVOCATION_FAILED`** —— 打开 `域名/api/health`，现在会直接返回
   失败原因和调用栈，而不是一个空白的 500。
 - **构建报错 `No Output Directory named "public" found`** —— 仓库根目录的 `build` 脚本是

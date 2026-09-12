@@ -44,6 +44,8 @@ export interface DbConfig {
   database: string;
   user: string;
   password: string;
+  /** 云端 MySQL（TiDB Cloud、Aiven 等）大多强制 TLS */
+  ssl?: boolean;
 }
 
 export interface LlmConfig {
@@ -88,10 +90,17 @@ export function parseDatabaseUrl(raw: string | undefined): Partial<DbConfig> {
       database,
       user: decodeURIComponent(u.username),
       password: decodeURIComponent(u.password),
+      ssl: isSslParam(u.searchParams.get('ssl') ?? u.searchParams.get('sslmode')),
     };
   } catch {
     return {};
   }
+}
+
+/** 云端 MySQL 常见的几种写法：?ssl=true、?sslmode=require */
+function isSslParam(v: string | null): boolean {
+  const s = (v ?? '').toLowerCase();
+  return s === 'true' || s === 'require' || s === 'required' || s === '1';
 }
 
 /**
@@ -158,6 +167,7 @@ function defaults(): AppConfig {
       database: pickEnv('DB_NAME', dbUrl.database ?? ''),
       user: pickEnv('DB_USER', dbUrl.user ?? ''),
       password: pickEnv('DB_PASSWORD', dbUrl.password ?? ''),
+      ssl: process.env.DB_SSL === 'true' || dbUrl.ssl === true,
     },
     llm: {
       baseUrl: pickEnv('LLM_BASE_URL', llmBundle.baseUrl ?? ''),

@@ -153,6 +153,10 @@ export async function connect(cfg: DbConfig): Promise<void> {
     maxIdle: 1,
     idleTimeout: 30_000,
     enableKeepAlive: true,
+    // 跨境连接比本机慢得多，默认 10 秒容易误判为不可达
+    connectTimeout: Number(process.env.DB_CONNECT_TIMEOUT ?? 20_000),
+    // 云端 MySQL（TiDB Cloud、Aiven 等）普遍强制 TLS
+    ...(cfg.ssl ? { ssl: { minVersion: 'TLSv1.2' as const } } : {}),
     charset: 'utf8mb4_unicode_ci',
     timezone: 'Z',
     dateStrings: true,
@@ -181,6 +185,26 @@ export async function connect(cfg: DbConfig): Promise<void> {
   if (old) await old.end().catch(() => {});
 }
 
+/**
+ * 把底层报错翻译成能指导下一步的提示。
+ * 连接超时最常见的原因是数据库只对特定网络开放，而函数跑在另一个地区。
+ */
+function explain(err: unknown, cfg: DbConfig): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const code = (err as { code?: string } | null)?.code ?? '';
+  if (code === 'ETIMEDOUT' || code === 'ECONNREFUSED' || /timeout/i.test(msg)) {
+    return (
+      `${msg}（连不上 ${cfg.host}:${cfg.port}）。` +
+      '若服务部署在云端而数据库只允许特定地区或白名单 IP 访问，就会一直超时。' +
+      '可以把函数区域调到离数据库更近的地方，或换一个对公网开放的数据库，' +
+      '也可以改用本地服务模式。'
+    );
+  }
+  if (code === 'ER_ACCESS_DENIED_ERROR') return `${msg}（用户名或密码不对）`;
+  if (code === 'ER_BAD_DB_ERROR') return `${msg}（库名不存在）`;
+  return msg;
+}
+
 /** 启动时按已保存的配置自动连接，失败不阻断服务启动 */
 export async function autoConnect(log: (msg: string) => void): Promise<void> {
   if (ready && pool) return; // 复用上一次调用留下的连接池（serverless 热实例）
@@ -193,7 +217,9 @@ export async function autoConnect(log: (msg: string) => void): Promise<void> {
     await connect(cfg.db);
     log(`MySQL 已连接：${connectedTo}，数据表已就绪。`);
   } catch (err) {
-    log(`MySQL 连接失败：${err instanceof Error ? err.message : String(err)}`);
+    lastError = explain(err, cfg.db);
+    sync();
+    log(`MySQL 连接失败：${lastError}`);
   }
 }
 

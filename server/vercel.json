@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "regions": [
-    "sin1"
+    "hkg1"
   ],
   "buildCommand": "echo \"后端服务无需构建步骤\"",
   "outputDirectory": "public",
