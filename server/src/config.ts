@@ -56,20 +56,98 @@ export interface AppConfig {
   retrieval: RetrievalConfig;
 }
 
+/**
+ * 解析一条 MySQL 连接串，省得在部署平台上一个个填。
+ * 形如 mysql://用户:密码@主机:端口/库名
+ */
+export function parseDatabaseUrl(raw: string | undefined): Partial<DbConfig> {
+  const v = (raw ?? '').trim();
+  if (!v) return {};
+  try {
+    const u = new URL(v.replace(/^mysql2:\/\//i, 'mysql://'));
+    const database = decodeURIComponent(u.pathname.replace(/^\//, ''));
+    return {
+      host: u.hostname,
+      port: Number(u.port) || 3306,
+      database,
+      user: decodeURIComponent(u.username),
+      password: decodeURIComponent(u.password),
+    };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * 解析一条大模型配置，支持两种写法：
+ *   base_url|api_key|model[|temperature]
+ *   {"baseUrl":"...","apiKey":"...","model":"..."}
+ */
+export function parseLlmConfig(raw: string | undefined): Partial<LlmConfig> {
+  const v = (raw ?? '').trim();
+  if (!v) return {};
+
+  if (v.startsWith('{')) {
+    try {
+      const j = JSON.parse(v) as Record<string, unknown>;
+      const pick = (...keys: string[]): string | undefined => {
+        for (const k of keys) {
+          const val = j[k];
+          if (typeof val === 'string' && val.trim()) return val.trim();
+        }
+        return undefined;
+      };
+      const out: Partial<LlmConfig> = {};
+      const baseUrl = pick('baseUrl', 'base_url', 'url');
+      const apiKey = pick('apiKey', 'api_key', 'key');
+      const model = pick('model');
+      if (baseUrl) out.baseUrl = baseUrl;
+      if (apiKey) out.apiKey = apiKey;
+      if (model) out.model = model;
+      const t = Number(j.temperature);
+      if (Number.isFinite(t)) out.temperature = t;
+      return out;
+    } catch {
+      return {};
+    }
+  }
+
+  // URL 里带 // 和 :，所以只用 | 或换行分隔，不用逗号
+  const parts = v.split(/[|\n]/).map((s) => s.trim()).filter(Boolean);
+  if (parts.length < 3) return {};
+  const out: Partial<LlmConfig> = {
+    baseUrl: parts[0],
+    apiKey: parts[1],
+    model: parts[2],
+  };
+  const t = Number(parts[3]);
+  if (Number.isFinite(t)) out.temperature = t;
+  return out;
+}
+
+/** 单独设置的 DB_* / LLM_* 变量优先级更高，可以覆盖连接串里的某一项 */
+function pickEnv(name: string, fallback: string): string {
+  const v = process.env[name];
+  return v === undefined || v.trim() === '' ? fallback : v.trim();
+}
+
 function defaults(): AppConfig {
+  const dbUrl = parseDatabaseUrl(process.env.DATABASE_URL ?? process.env.MYSQL_URL);
+  const llmBundle = parseLlmConfig(process.env.LLM_CONFIG);
+
   return {
     db: {
-      host: process.env.DB_HOST ?? '',
-      port: Number(process.env.DB_PORT ?? 3306),
-      database: process.env.DB_NAME ?? '',
-      user: process.env.DB_USER ?? '',
-      password: process.env.DB_PASSWORD ?? '',
+      host: pickEnv('DB_HOST', dbUrl.host ?? ''),
+      port: Number(pickEnv('DB_PORT', String(dbUrl.port ?? 3306))) || 3306,
+      database: pickEnv('DB_NAME', dbUrl.database ?? ''),
+      user: pickEnv('DB_USER', dbUrl.user ?? ''),
+      password: pickEnv('DB_PASSWORD', dbUrl.password ?? ''),
     },
     llm: {
-      baseUrl: process.env.LLM_BASE_URL ?? '',
-      apiKey: process.env.LLM_API_KEY ?? '',
-      model: process.env.LLM_MODEL ?? '',
-      temperature: Number(process.env.LLM_TEMPERATURE ?? 0.2),
+      baseUrl: pickEnv('LLM_BASE_URL', llmBundle.baseUrl ?? ''),
+      apiKey: pickEnv('LLM_API_KEY', llmBundle.apiKey ?? ''),
+      model: pickEnv('LLM_MODEL', llmBundle.model ?? ''),
+      temperature: Number(pickEnv('LLM_TEMPERATURE', String(llmBundle.temperature ?? 0.2))) || 0.2,
     },
     retrieval: {
       scope: 'page+library',

@@ -34,14 +34,20 @@ Chrome 扩展  ──HTTP───▶  本机 127.0.0.1:8787（npm run server）
 1. 把项目推到 GitHub（`add.txt`、`server/.env` 已在 .gitignore 里，凭据不会上传）。
 2. 在 Vercel 点 **Add New → Project**，导入这个仓库。
 3. **Root Directory 选择 `server`**，其余保持默认，先不要点 Deploy。
-4. 展开 **Environment Variables**，逐条填入：
+4. 展开 **Environment Variables**，填入下面 3 个变量：
 
-   | 变量 | 说明 |
+   | 变量 | 格式 |
    |---|---|
-   | `ACCESS_TOKEN` | 自己随便设一串长密码，插件里要填同一个值。**不设的话服务会拒绝所有请求** |
-   | `DB_HOST` `DB_PORT` `DB_NAME` `DB_USER` `DB_PASSWORD` | MySQL 连接信息 |
-   | `LLM_BASE_URL` `LLM_API_KEY` `LLM_MODEL` | 大模型接口，Base URL 要以 `/v1` 结尾 |
-   | `LLM_TEMPERATURE` | 可选，默认 0.2 |
+   | `ACCESS_TOKEN` | 自己设一串长随机密码，插件里要填同一个值。**不设的话服务会拒绝所有请求** |
+   | `DATABASE_URL` | `mysql://用户名:密码@主机:端口/库名` |
+   | `LLM_CONFIG` | `Base URL|API Key|模型名`，用竖线分隔，Base URL 以 `/v1` 结尾 |
+
+   Vercel 的环境变量框支持**整段粘贴**：把三行 `KEY=value` 一起贴进 Key 输入框，会自动拆成三条。
+   密码里含 `@ : / ? #` 时要做 URL 转义（`@` 写成 `%40`）。
+
+   想单独控制某一项时，也可以改用展开写法（`DB_HOST`、`DB_PORT`、`DB_NAME`、`DB_USER`、
+   `DB_PASSWORD`、`LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`、`LLM_TEMPERATURE`）。
+   两种写法可以混用，单独设置的变量优先级更高，会覆盖合并变量里的对应项。
 
 5. 点 Deploy，完成后复制分配的域名，例如 `https://your-project.vercel.app`。
 6. 打开插件侧边栏，填入域名和 ACCESS_TOKEN，点「测试并连接」。
@@ -123,7 +129,9 @@ npm --workspace extension run watch   # 监听重建（改完在扩展页点刷�
 npm run server:dev   # 服务热重载
 npx tsx tools/verify-parse.mts Reddit.html   # 用页面快照验证 DOM 解析逻辑（快照需自行另存，仓库未包含）
 npx tsx tools/test-citations.mts             # 验证引用 ID 的纠错逻辑
+npx tsx tools/test-env-bundles.mts           # 验证合并写法的环境变量解析
 npx tsx tools/test-vercel-handler.mts        # 在本机模拟 Vercel 环境跑通整套接口
+npx tsx tools/test-vercel-handler.mts --bundled   # 同上，但只用 3 个合并变量
 ```
 
 目录：

@@ -6,7 +6,8 @@ dist/
 # 本地配置与凭据，绝对不要提交
 add.txt
 .env
-.env.local
+.env.*
+!.env.example
 server/.env
 server/data/
 
