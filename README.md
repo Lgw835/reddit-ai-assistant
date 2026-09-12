@@ -1,5 +1,7 @@
 # Reddit 评论收集器
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant&root-directory=server&project-name=reddit-ai-assistant&repository-name=reddit-ai-assistant&env=ACCESS_TOKEN%2CDATABASE_URL%2CLLM_CONFIG&envDescription=%E8%AE%BF%E9%97%AE%E4%BB%A4%E7%89%8C%E3%80%81MySQL+%E8%BF%9E%E6%8E%A5%E4%B8%B2%E3%80%81%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%85%8D%E7%BD%AE%EF%BC%8C%E4%B8%89%E4%B8%AA%E9%83%BD%E5%BF%85%E5%A1%AB&envLink=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant%2Fblob%2Fmain%2Fserver%2F.env.example)
+
 一个 Chrome / Edge 扩展 + 可自部署的后端服务：在 Reddit 上一键收藏评论到自己的 MySQL 数据库，并在浏览器右侧用 AI 对话，从**当前页面**和**收藏库**里找出对应的评论，回答中带可点击的引用，点一下就跳回原评论并高亮。
 
 ## 它能做什么
@@ -31,34 +33,55 @@ Chrome 扩展  ──HTTP───▶  本机 127.0.0.1:8787（npm run server）
 
 ## 部署到 Vercel
 
-1. 把项目推到 GitHub（`add.txt`、`server/.env` 已在 .gitignore 里，凭据不会上传）。
-2. 在 Vercel 点 **Add New → Project**，导入这个仓库。
-3. **Root Directory 选择 `server`**，其余保持默认，先不要点 Deploy。
-4. 展开 **Environment Variables**，填入下面 3 个变量：
+### 一键部署
 
-   | 变量 | 格式 |
-   |---|---|
-   | `ACCESS_TOKEN` | 自己设一串长随机密码，插件里要填同一个值。**不设的话服务会拒绝所有请求** |
-   | `DATABASE_URL` | `mysql://用户名:密码@主机:端口/库名` |
-   | `LLM_CONFIG` | `Base URL|API Key|模型名`，用竖线分隔，Base URL 以 `/v1` 结尾 |
+点这个按钮，Vercel 会自动把仓库复制到你的账号并创建项目，Root Directory 已经预设为 `server`，
+页面上只会问你要三个环境变量：
 
-   Vercel 的环境变量框支持**整段粘贴**：把三行 `KEY=value` 一起贴进 Key 输入框，会自动拆成三条。
-   密码里含 `@ : / ? #` 时要做 URL 转义（`@` 写成 `%40`）。
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant&root-directory=server&project-name=reddit-ai-assistant&repository-name=reddit-ai-assistant&env=ACCESS_TOKEN%2CDATABASE_URL%2CLLM_CONFIG&envDescription=%E8%AE%BF%E9%97%AE%E4%BB%A4%E7%89%8C%E3%80%81MySQL+%E8%BF%9E%E6%8E%A5%E4%B8%B2%E3%80%81%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%85%8D%E7%BD%AE%EF%BC%8C%E4%B8%89%E4%B8%AA%E9%83%BD%E5%BF%85%E5%A1%AB&envLink=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant%2Fblob%2Fmain%2Fserver%2F.env.example)
 
-   想单独控制某一项时，也可以改用展开写法（`DB_HOST`、`DB_PORT`、`DB_NAME`、`DB_USER`、
-   `DB_PASSWORD`、`LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL`、`LLM_TEMPERATURE`）。
-   两种写法可以混用，单独设置的变量优先级更高，会覆盖合并变量里的对应项。
+三个变量填什么：
 
-5. 点 Deploy，完成后复制分配的域名，例如 `https://your-project.vercel.app`。
-6. 打开插件侧边栏，填入域名和 ACCESS_TOKEN，点「测试并连接」。
+| 变量 | 格式 | 例子 |
+|---|---|---|
+| `ACCESS_TOKEN` | 自己设一串长随机密码 | `VECrKv...`（插件里要填同一个值） |
+| `DATABASE_URL` | `mysql://用户名:密码@主机:端口/库名` | `mysql://alice:pwd@db.example.com:3306/mydb` |
+| `LLM_CONFIG` | `Base URL|API Key|模型名` | `https://api.example.com/v1|sk-xxx|gpt-4o-mini` |
 
-几个部署上的注意点：
+> `ACCESS_TOKEN` 不设的话，服务会拒绝所有请求。这是有意为之：服务一旦上公网，
+> 谁拿到域名谁就能读你的收藏库、用你的模型额度，这个令牌是唯一的门锁。
+>
+> 密码里含 `@ : / ? #` 时要做 URL 转义（`@` 写成 `%40`）。
+
+部署完成后：
+
+1. 复制 Vercel 分配的域名，例如 `https://your-project.vercel.app`
+2. 先在浏览器打开 `域名/api/health`，确认返回的 JSON 里 `db.connected` 是 `true`
+3. 打开插件侧边栏，填入域名和 ACCESS_TOKEN，点「测试并连接」
+
+### 手动导入（仓库是私有的时候用这个）
+
+一键按钮走的是「复制模板仓库」的流程，源仓库需要是公开的。如果你的仓库是私有的、
+按钮报错找不到仓库，改用导入流程：
+
+[在 Vercel 导入这个仓库](https://vercel.com/new/import?s=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant)
+
+导入后需要手动设置两处：
+
+1. **Root Directory 改成 `server`**（这一步不改必定部署失败）
+2. 在 Environment Variables 里填上面那三个变量。Vercel 的输入框支持**整段粘贴**：
+   把三行 `KEY=value` 一起贴进 Key 框，会自动拆成三条
+
+### 其它说明
 
 - 函数区域已在 `server/vercel.json` 里设为新加坡 `sin1`，离国内的数据库和常见的 AI 接口都比较近。
 - 数据表在第一次请求时自动创建，不需要手动建。
-- **云端部署后，数据库连接信息只能在 Vercel 环境变量里改**，插件设置页里那几个框会变成只读；大模型配置仍可在插件里随时改，改动存进数据库的 `settings` 表。
-- Vercel 免费版单次请求最长 60 秒，超长回答可能被截断；回答是流式返回的，但云端可能整体缓冲后一次性送达，看起来像"想了一会儿突然全部出现"。
-- 服务部署在公网就意味着谁拿到域名谁就能访问，`ACCESS_TOKEN` 是唯一的门锁，别设成简单字符串，也别把它提交进仓库。
+- **云端部署后，数据库连接信息只能在 Vercel 环境变量里改**，插件设置页里那几个框会变成只读；
+  大模型配置仍可在插件里随时改，改动存进数据库的 `settings` 表。
+- 想单独换模型而不重写整串，加一条 `LLM_MODEL` 即可，单项变量优先级高于 `LLM_CONFIG`。
+  同理还有 `DB_HOST` `DB_PORT` `DB_NAME` `DB_USER` `DB_PASSWORD` `LLM_BASE_URL` `LLM_API_KEY` `LLM_TEMPERATURE`。
+- Vercel 免费版单次请求最长 60 秒，超长回答可能被截断；回答是流式返回的，
+  但云端可能整体缓冲后一次性送达，看起来像"想了一会儿突然全部出现"。
 
 ## 安装
 
