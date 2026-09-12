@@ -109,7 +109,8 @@ https://api.deepseek.com/v1|sk-abc123|deepseek-chat|0.3
 部署完成后：
 
 1. 复制 Vercel 分配的域名，例如 `https://your-project.vercel.app`
-2. 先在浏览器打开 `域名/api/health`，确认返回的 JSON 里 `db.connected` 是 `true`
+2. 直接在浏览器打开这个域名，会看到一个服务状态页，上面列出数据库、模型、
+   访问令牌是否都正常（也可以打开 `域名/api/health` 看原始 JSON）
 3. 打开插件侧边栏，填入域名和 ACCESS_TOKEN，点「测试并连接」
 
 ### 手动导入（仓库是私有的时候用这个）
@@ -132,6 +133,10 @@ Vercel 的输入框支持**整段粘贴**：把三行 `KEY=value` 一起贴进 K
   大模型配置仍可在插件里随时改，改动存进数据库的 `settings` 表。
 - 想单独换模型而不重写整串，加一条 `LLM_MODEL` 即可，单项变量优先级高于 `LLM_CONFIG`。
   同理还有 `DB_HOST` `DB_PORT` `DB_NAME` `DB_USER` `DB_PASSWORD` `LLM_BASE_URL` `LLM_API_KEY` `LLM_TEMPERATURE`。
+- **构建报错 `No Output Directory named "public" found`** —— 仓库根目录的 `build` 脚本是
+  用来打包浏览器扩展的，Vercel 会误以为要构建静态站点。`vercel.json` 里已经用
+  `buildCommand` 跳过构建并把 `outputDirectory` 指向 `public/`（一个服务状态页）。
+  如果你在项目设置里手动改过 Build Command 或 Output Directory，把它们恢复成自动检测。
 - **部署后访问 `/api/health` 是 404** —— 说明函数没被部署出来。到 Vercel 项目的
   Settings → Build & Deployment → Root Directory，留空或填 `server`，保存后重新部署
   （Deployments 页最新一条右侧菜单里的 Redeploy）。

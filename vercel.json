@@ -1,12 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "regions": ["sin1"],
+  "regions": [
+    "sin1"
+  ],
+  "buildCommand": "echo \"后端服务无需构建步骤\"",
+  "outputDirectory": "public",
   "functions": {
     "api/index.ts": {
       "maxDuration": 60,
       "memory": 1024
     }
   },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ]
 }

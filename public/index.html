@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reddit 助手服务</title>
+    <style>
+      :root { color-scheme: light dark; --fg: #1a1a1b; --bg: #fff; --weak: #6b6f72; --line: #e2e4e6; --accent: #ff4500; }
+      @media (prefers-color-scheme: dark) {
+        :root { --fg: #e4e6eb; --bg: #0f1113; --weak: #9aa0a6; --line: #2b2f33; }
+      }
+      body {
+        margin: 0; padding: 40px 20px; background: var(--bg); color: var(--fg);
+        font: 400 15px/1.7 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+      }
+      main { max-width: 560px; margin: 0 auto; }
+      h1 { font-size: 20px; margin: 0 0 4px; }
+      .sub { color: var(--weak); font-size: 13px; margin: 0 0 24px; }
+      .card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+      .row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 14px; }
+      .row span:first-child { color: var(--weak); }
+      .ok { color: #2e7d32; font-weight: 600; }
+      .bad { color: #c0392b; font-weight: 600; }
+      code { padding: 1px 5px; border-radius: 4px; background: rgba(127,127,127,.18); font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+      ol { padding-left: 20px; color: var(--weak); font-size: 14px; }
+      .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1><span class="dot"></span>Reddit 助手服务</h1>
+      <p class="sub">这是浏览器插件的后端服务，不是给人浏览的页面。</p>
+
+      <div class="card" id="status">
+        <div class="row"><span>服务状态</span><span id="s-service">检测中…</span></div>
+        <div class="row"><span>数据库</span><span id="s-db">—</span></div>
+        <div class="row"><span>大模型配置</span><span id="s-llm">—</span></div>
+        <div class="row"><span>访问令牌</span><span id="s-auth">—</span></div>
+      </div>
+
+      <div class="card">
+        <strong style="font-size:14px">接下来做什么</strong>
+        <ol>
+          <li>复制浏览器地址栏里的域名</li>
+          <li>打开插件侧边栏，粘贴到「服务地址」</li>
+          <li>填入部署时设置的 <code>ACCESS_TOKEN</code></li>
+          <li>点「测试并连接」</li>
+        </ol>
+      </div>
+    </main>
+
+    <script>
+      const set = (id, text, cls) => {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        if (cls) el.className = cls;
+      };
+      fetch('/api/health')
+        .then((r) => r.json())
+        .then((h) => {
+          set('s-service', '正常运行', 'ok');
+          set('s-db', h.db && h.db.connected ? '已连接' : '未连接' + (h.db && h.db.error ? '：' + h.db.error : ''), h.db && h.db.connected ? 'ok' : 'bad');
+          set('s-llm', h.llmConfigured ? '已配置' : '未配置', h.llmConfigured ? 'ok' : 'bad');
+          set('s-auth', h.authRequired ? '已启用' : '未设置（公网部署必须设置 ACCESS_TOKEN）', h.authRequired ? 'ok' : 'bad');
+        })
+        .catch(() => {
+          set('s-service', '接口无响应，请检查部署日志', 'bad');
+        });
+    </script>
+  </body>
+</html>

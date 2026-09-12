@@ -15,5 +15,7 @@ server/data/
 # 仅用于本地验证 DOM 解析，不入库
 *.html
 !extension/sidepanel.html
+!public/index.html
+!server/public/index.html
 
 *.log
