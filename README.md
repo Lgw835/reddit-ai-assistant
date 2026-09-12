@@ -1,6 +1,6 @@
 # Reddit 评论收集器
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant&root-directory=server&project-name=reddit-ai-assistant&repository-name=reddit-ai-assistant&env=ACCESS_TOKEN%2CDATABASE_URL%2CLLM_CONFIG&envDescription=%E8%AE%BF%E9%97%AE%E4%BB%A4%E7%89%8C%E3%80%81MySQL+%E8%BF%9E%E6%8E%A5%E4%B8%B2%E3%80%81%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%85%8D%E7%BD%AE%EF%BC%8C%E4%B8%89%E4%B8%AA%E9%83%BD%E5%BF%85%E5%A1%AB&envLink=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant%2Fblob%2Fmain%2Fserver%2F.env.example)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant&project-name=reddit-ai-assistant&repository-name=reddit-ai-assistant&env=ACCESS_TOKEN%2CDATABASE_URL%2CLLM_CONFIG&envDescription=%E8%AE%BF%E9%97%AE%E4%BB%A4%E7%89%8C%E3%80%81MySQL+%E8%BF%9E%E6%8E%A5%E4%B8%B2%E3%80%81%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%85%8D%E7%BD%AE%EF%BC%8C%E4%B8%89%E4%B8%AA%E9%83%BD%E5%BF%85%E5%A1%AB&envLink=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant%2Fblob%2Fmain%2Fserver%2F.env.example)
 
 一个 Chrome / Edge 扩展 + 可自部署的后端服务：在 Reddit 上一键收藏评论到自己的 MySQL 数据库，并在浏览器右侧用 AI 对话，从**当前页面**和**收藏库**里找出对应的评论，回答中带可点击的引用，点一下就跳回原评论并高亮。
 
@@ -35,10 +35,9 @@ Chrome 扩展  ──HTTP───▶  本机 127.0.0.1:8787（npm run server）
 
 ### 一键部署
 
-点这个按钮，Vercel 会自动把仓库复制到你的账号并创建项目，Root Directory 已经预设为 `server`，
-页面上只会问你要三个环境变量：
+点这个按钮，Vercel 会自动把仓库复制到你的账号并创建项目，页面上只会问你要三个环境变量：
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant&root-directory=server&project-name=reddit-ai-assistant&repository-name=reddit-ai-assistant&env=ACCESS_TOKEN%2CDATABASE_URL%2CLLM_CONFIG&envDescription=%E8%AE%BF%E9%97%AE%E4%BB%A4%E7%89%8C%E3%80%81MySQL+%E8%BF%9E%E6%8E%A5%E4%B8%B2%E3%80%81%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%85%8D%E7%BD%AE%EF%BC%8C%E4%B8%89%E4%B8%AA%E9%83%BD%E5%BF%85%E5%A1%AB&envLink=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant%2Fblob%2Fmain%2Fserver%2F.env.example)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant&project-name=reddit-ai-assistant&repository-name=reddit-ai-assistant&env=ACCESS_TOKEN%2CDATABASE_URL%2CLLM_CONFIG&envDescription=%E8%AE%BF%E9%97%AE%E4%BB%A4%E7%89%8C%E3%80%81MySQL+%E8%BF%9E%E6%8E%A5%E4%B8%B2%E3%80%81%E5%A4%A7%E6%A8%A1%E5%9E%8B%E9%85%8D%E7%BD%AE%EF%BC%8C%E4%B8%89%E4%B8%AA%E9%83%BD%E5%BF%85%E5%A1%AB&envLink=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant%2Fblob%2Fmain%2Fserver%2F.env.example)
 
 三个变量填什么：
 
@@ -120,11 +119,10 @@ https://api.deepseek.com/v1|sk-abc123|deepseek-chat|0.3
 
 [在 Vercel 导入这个仓库](https://vercel.com/new/import?s=https%3A%2F%2Fgithub.com%2FLgw835%2Freddit-ai-assistant)
 
-导入后需要手动设置两处：
+导入时**所有构建设置都保持默认**，只需要在 Environment Variables 里填上面那三个变量。
+Vercel 的输入框支持**整段粘贴**：把三行 `KEY=value` 一起贴进 Key 框，会自动拆成三条。
 
-1. **Root Directory 改成 `server`**（这一步不改必定部署失败）
-2. 在 Environment Variables 里填上面那三个变量。Vercel 的输入框支持**整段粘贴**：
-   把三行 `KEY=value` 一起贴进 Key 框，会自动拆成三条
+> 仓库根目录和 `server/` 下各放了一份入口，所以 Root Directory 留空或填 `server` 都能部署成功。
 
 ### 其它说明
 
@@ -134,6 +132,9 @@ https://api.deepseek.com/v1|sk-abc123|deepseek-chat|0.3
   大模型配置仍可在插件里随时改，改动存进数据库的 `settings` 表。
 - 想单独换模型而不重写整串，加一条 `LLM_MODEL` 即可，单项变量优先级高于 `LLM_CONFIG`。
   同理还有 `DB_HOST` `DB_PORT` `DB_NAME` `DB_USER` `DB_PASSWORD` `LLM_BASE_URL` `LLM_API_KEY` `LLM_TEMPERATURE`。
+- **部署后访问 `/api/health` 是 404** —— 说明函数没被部署出来。到 Vercel 项目的
+  Settings → Build & Deployment → Root Directory，留空或填 `server`，保存后重新部署
+  （Deployments 页最新一条右侧菜单里的 Redeploy）。
 - Vercel 免费版单次请求最长 60 秒，超长回答可能被截断；回答是流式返回的，
   但云端可能整体缓冲后一次性送达，看起来像"想了一会儿突然全部出现"。
 
@@ -209,6 +210,7 @@ npx tsx tools/test-citations.mts             # 验证引用 ID 的纠错逻辑
 npx tsx tools/test-env-bundles.mts           # 验证合并写法的环境变量解析
 npx tsx tools/test-vercel-handler.mts        # 在本机模拟 Vercel 环境跑通整套接口
 npx tsx tools/test-vercel-handler.mts --bundled   # 同上，但只用 3 个合并变量
+npx tsx tools/test-vercel-handler.mts --root      # 测仓库根目录的部署入口
 ```
 
 目录：
@@ -218,6 +220,8 @@ extension/         扩展（Manifest V3 + TypeScript + Vite）
   src/content/     注入 Reddit 页面：解析评论、注入收藏按钮、展开、高亮
   src/sidepanel/   右侧面板：对话 / 收藏库 / 设置
   src/background/  service worker：侧栏、右键菜单、代发桥接请求
+api/index.ts       Vercel 入口（根目录部署时用）
+vercel.json        根目录部署配置
 server/            后端服务（Fastify + mysql2），本地与 Vercel 共用一套代码
   src/app.ts       应用工厂：CORS、令牌校验、路由、数据库连接
   src/index.ts     本地入口（npm run server）

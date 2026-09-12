@@ -18,7 +18,10 @@ if (existsSync(envPath)) {
   }
 }
 
-const { default: handler } = await import('../server/api/index.ts');
+// --root 时测仓库根目录的入口，否则测 server/ 下的入口
+const entry = process.argv.includes('--root') ? '../api/index.ts' : '../server/api/index.ts';
+console.log('入口：' + entry);
+const { default: handler } = await import(entry);
 
 const PORT = 8799;
 const server = createServer((req, res) => {
