@@ -42,16 +42,70 @@ Chrome 扩展  ──HTTP───▶  本机 127.0.0.1:8787（npm run server）
 
 三个变量填什么：
 
-| 变量 | 格式 | 例子 |
-|---|---|---|
-| `ACCESS_TOKEN` | 自己设一串长随机密码 | `VECrKv...`（插件里要填同一个值） |
-| `DATABASE_URL` | `mysql://用户名:密码@主机:端口/库名` | `mysql://alice:pwd@db.example.com:3306/mydb` |
-| `LLM_CONFIG` | `Base URL|API Key|模型名` | `https://api.example.com/v1|sk-xxx|gpt-4o-mini` |
+| 变量 | 说明 |
+|---|---|
+| `ACCESS_TOKEN` | 自己设一串长随机密码，插件里要填同一个值 |
+| `DATABASE_URL` | MySQL 连接串，见下方格式 |
+| `LLM_CONFIG` | 大模型配置，见下方格式 |
 
 > `ACCESS_TOKEN` 不设的话，服务会拒绝所有请求。这是有意为之：服务一旦上公网，
 > 谁拿到域名谁就能读你的收藏库、用你的模型额度，这个令牌是唯一的门锁。
->
-> 密码里含 `@ : / ? #` 时要做 URL 转义（`@` 写成 `%40`）。
+
+#### DATABASE_URL 怎么写
+
+```
+mysql://用户名:密码@主机:端口/库名
+```
+
+```
+mysql://alice:s3cret@db.example.com:3306/reddit
+```
+
+端口可以省略，默认 3306。密码里含 `@ : / ? #` 时要做 URL 转义，
+`@` 写成 `%40`、`:` 写成 `%3A`、`/` 写成 `%2F`。
+
+#### LLM_CONFIG 怎么写
+
+三段用竖线 `|` 隔开，顺序固定：
+
+```
+Base URL|API Key|模型名
+```
+
+比如接 OpenAI：
+
+```
+https://api.openai.com/v1|sk-proj-abc123def456|gpt-4o-mini
+```
+
+常见服务商照抄这一列改成自己的 Key 就行（模型名以各家文档为准）：
+
+| 服务 | 填进 LLM_CONFIG 的完整内容 |
+|---|---|
+| OpenAI | `https://api.openai.com/v1\|sk-proj-你的key\|gpt-4o-mini` |
+| DeepSeek | `https://api.deepseek.com/v1\|sk-你的key\|deepseek-chat` |
+| 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1\|sk-你的key\|qwen-plus` |
+| Kimi | `https://api.moonshot.cn/v1\|sk-你的key\|moonshot-v1-8k` |
+| 智谱 GLM | `https://open.bigmodel.cn/api/paas/v4\|你的key\|glm-4-flash` |
+| OpenRouter | `https://openrouter.ai/api/v1\|sk-or-你的key\|openai/gpt-4o-mini` |
+| 自建 / 中转接口 | `http://1.2.3.4:8317/v1\|你的key\|你的模型名` |
+
+还可以加第四段指定温度，不写默认 0.2（越低越保守，检索场景建议别调高）：
+
+```
+https://api.deepseek.com/v1|sk-abc123|deepseek-chat|0.3
+```
+
+几个容易踩的点：
+
+- **Base URL 写到 `/v1` 为止**，不要带 `/chat/completions`，那段由程序自己拼。结尾多个斜杠没关系。
+- **不要加引号**，整串直接填，`"https://..."` 这样反而会出错。
+- **三段都不能空**。接口不需要 Key 时随便填个占位符，比如 `none`。
+- 自建接口用 `http://` 没问题，这个请求是服务端发出的，不受浏览器混合内容限制。
+- **本地的 Ollama 填不了**。Vercel 上的函数访问不到你电脑上的 `localhost:11434`，
+  想用本地模型就改用本地服务模式（`npm run server`）。
+- Key 里正好含竖线时改用 JSON 写法：
+  `{"baseUrl":"https://api.example.com/v1","apiKey":"a|b","model":"gpt-4o-mini"}`
 
 部署完成后：
 
